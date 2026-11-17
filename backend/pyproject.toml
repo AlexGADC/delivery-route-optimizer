@@ -1,0 +1,16 @@
+[project]
+name = "delivery-route-optimizer-backend"
+version = "0.1.0"
+description = "Solvers and API for a delivery route optimizer with time windows"
+requires-python = ">=3.14"
+dependencies = []
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# Lets the tests import the "app" package without installing it.
+pythonpath = ["."]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.2.0",
+]
