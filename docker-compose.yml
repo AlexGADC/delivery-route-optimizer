@@ -1,0 +1,39 @@
+# Local services for the delivery route optimizer.
+#
+# First-time setup (once, or whenever the map file is replaced):
+#   1. Download Romania's map (about 320 MB) into data/osrm/:
+#        curl.exe -L --create-dirs -o data/osrm/romania-latest.osm.pbf https://download.geofabrik.de/europe/romania-latest.osm.pbf
+#   2. Let OSRM prepare it (takes several minutes):
+#        docker compose run --rm osrm-prepare
+#
+# Every day:
+#   docker compose up -d osrm     start the routing engine on http://localhost:5000
+#   docker compose down           stop it
+#
+# The image is pinned by digest so everyone gets the same OSRM build (v26.11.0).
+
+x-osrm-image: &osrm-image ghcr.io/project-osrm/osrm-backend@sha256:e1929ae2818226284d7ef007329098a30851c11528ab3712bc9c8d68da78278b
+
+services:
+  # Routing engine: driving times, distances and street geometry.
+  #   /table  travel-time matrix between many points
+  #   /route  street path through an ordered list of points
+  osrm:
+    image: *osrm-image
+    command: osrm-routed --algorithm mld --max-table-size 1000 /data/romania-latest.osrm
+    ports:
+      - "127.0.0.1:5000:5000"
+    volumes:
+      - ./data/osrm:/data
+
+  # One-off job that turns the downloaded map into OSRM's own files.
+  # It only runs when asked for by name: docker compose run --rm osrm-prepare
+  osrm-prepare:
+    image: *osrm-image
+    profiles: ["prepare"]
+    command: >
+      sh -c "osrm-extract -p /opt/car.lua /data/romania-latest.osm.pbf &&
+             osrm-partition /data/romania-latest.osrm &&
+             osrm-customize /data/romania-latest.osrm"
+    volumes:
+      - ./data/osrm:/data

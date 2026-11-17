@@ -1,0 +1,14 @@
+# Map data and the files OSRM prepares from it (large; rebuilt with docker compose)
+data/osrm/
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# Node
+node_modules/
+
+# Local settings and secrets
+.env
